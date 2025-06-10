@@ -5,6 +5,8 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
+#define MAX_SCORE 2
+
 typedef struct {
     int x, y;
     int w, h;
@@ -19,7 +21,8 @@ typedef struct {
 
 typedef enum {
     STATE_MENU,
-    STATE_GAME
+    STATE_GAME,
+    STATE_GAMEOVER
 } GameState;
 
 // Объявление глобальных переменных
@@ -35,10 +38,11 @@ int playerScore = 0;
 int botScore = 0;
 
 // Настройка сложности бота (1 = легко, 2 = средне, 3 = сложно)
-int botDifficulty = 2;  // по умолчанию
-
 const char* difficultyLabels[] = {"Easy", "Medium", "Hard"};
+int botDifficulty = 2;  // по умолчанию "Средне"
 int selectedDifficulty = 1; // по умолчанию "Средне"
+
+const char* winnerText = NULL;
 
 // AI параметры
 int botSpeed = 6;
@@ -52,8 +56,9 @@ void handleInput(SDL_Event* e, int* running);
 void update();
 void render();
 void renderMenu();
+void renderGameOver();
 void resetBall();
-void setupBotDifficulty();
+void setupBotDifficulty(int level);
 void renderScore();
 
 int main() {
@@ -62,7 +67,7 @@ int main() {
         return 1;
     }
 
-    setupBotDifficulty();
+    setupBotDifficulty(selectedDifficulty + 1);
     resetBall();
 
     int running = 1;
@@ -73,7 +78,9 @@ int main() {
             handleInput(&event, &running);
         }
 
-        update();
+        if (gameState == STATE_GAME) {
+            update();
+        }
         render();
         SDL_Delay(16); // ~60 FPS
     }
@@ -137,9 +144,11 @@ void handleInput(SDL_Event* e, int* running) {
             if (e->key.keysym.sym == SDLK_RETURN) {
                 gameState = STATE_GAME;
                 setupBotDifficulty(selectedDifficulty + 1); // переводим в 1..3
-                setupBotDifficulty();
                 resetBall();
             }
+            if (e->key.keysym.sym == SDLK_ESCAPE) {
+		*running = 0;
+	    }
         }
     } else if (gameState == STATE_GAME) {
         const Uint8* keys = SDL_GetKeyboardState(NULL);
@@ -149,6 +158,18 @@ void handleInput(SDL_Event* e, int* running) {
         if (keys[SDL_SCANCODE_S] && player.y + player.h < SCREEN_HEIGHT) {
             player.y += player.speed;
         }
+    } else if (gameState == STATE_GAMEOVER) {
+    	if (e->type == SDL_KEYDOWN) {
+	    if (e->key.keysym.sym == SDLK_RETURN) {
+		// Сброс состояния и счёта
+		playerScore = 0;
+		botScore = 0;
+		selectedDifficulty = 1;
+		gameState = STATE_MENU;
+	    } else if (e->key.keysym.sym == SDLK_ESCAPE) {
+		*running = 0;
+	    }
+	}
     }
 }
 
@@ -187,13 +208,22 @@ void update() {
         playerScore++;
         resetBall();
     }
+    
+    if (playerScore >= MAX_SCORE || botScore >= MAX_SCORE) {
+        if (playerScore >= MAX_SCORE) {
+	    winnerText = "You win!";
+	} else if (botScore >= MAX_SCORE) {
+	    winnerText = "You lose!";
+	}
+        gameState = STATE_GAMEOVER;
+    }
 }
 
 // Отрисовка всех объектов
 void render() {
     if (gameState == STATE_MENU) {
         renderMenu();
-    } else {
+    } else if (gameState == STATE_GAME) {
         // printf("Ball: (%.2f, %.2f)\n", ball.x, ball.y); // дебаг мяча
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -216,6 +246,8 @@ void render() {
 
         renderScore();
         SDL_RenderPresent(renderer);
+    } else if (gameState == STATE_GAMEOVER) {
+        renderGameOver();
     }
 }
 
@@ -280,6 +312,34 @@ void renderMenu() {
     SDL_RenderPresent(renderer);
 }
 
+// Отрисовка геймовера
+void renderGameOver() {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_Color white = {255, 255, 255};
+
+    // Победитель
+    SDL_Surface* surface = TTF_RenderText_Solid(font, winnerText, white);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    int w, h;
+    SDL_QueryTexture(texture, NULL, NULL, &w, &h);
+    SDL_Rect rect = {SCREEN_WIDTH / 2 - w / 2, 200, w, h};
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+
+    // Подсказка
+    SDL_Surface* hintSurface = TTF_RenderText_Solid(font, "Enter -- again | Esc -- exit", white);
+    SDL_Texture* hintTexture = SDL_CreateTextureFromSurface(renderer, hintSurface);
+    SDL_QueryTexture(hintTexture, NULL, NULL, &w, &h);
+    SDL_Rect hintRect = {SCREEN_WIDTH / 2 - w / 2, 300, w, h};
+    SDL_RenderCopy(renderer, hintTexture, NULL, &hintRect);
+    SDL_FreeSurface(hintSurface);
+    SDL_DestroyTexture(hintTexture);
+
+    SDL_RenderPresent(renderer);
+}
 
 // Сброс позиции мяча в центр
 void resetBall() {
