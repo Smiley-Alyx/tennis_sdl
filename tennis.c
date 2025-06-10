@@ -5,9 +5,6 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-// Настройка сложности бота (1 = легко, 2 = средне, 3 = сложно)
-#define BOT_DIFFICULTY 2
-
 typedef struct {
     int x, y;
     int w, h;
@@ -20,6 +17,11 @@ typedef struct {
     int size;
 } Ball;
 
+typedef enum {
+    STATE_MENU,
+    STATE_GAME
+} GameState;
+
 // Объявление глобальных переменных
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -27,9 +29,16 @@ TTF_Font* font = NULL;
 
 Paddle player, bot;
 Ball ball;
+GameState gameState = STATE_MENU;
 
 int playerScore = 0;
 int botScore = 0;
+
+// Настройка сложности бота (1 = легко, 2 = средне, 3 = сложно)
+int botDifficulty = 2;  // по умолчанию
+
+const char* difficultyLabels[] = {"Easy", "Medium", "Hard"};
+int selectedDifficulty = 1; // по умолчанию "Средне"
 
 // AI параметры
 int botSpeed = 6;
@@ -42,6 +51,7 @@ void cleanUp();
 void handleInput(SDL_Event* e, int* running);
 void update();
 void render();
+void renderMenu();
 void resetBall();
 void setupBotDifficulty();
 void renderScore();
@@ -118,12 +128,27 @@ void handleInput(SDL_Event* e, int* running) {
         *running = 0;
     }
 
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-    if (keys[SDL_SCANCODE_W] && player.y > 0) {
-        player.y -= player.speed;
-    }
-    if (keys[SDL_SCANCODE_S] && player.y + player.h < SCREEN_HEIGHT) {
-        player.y += player.speed;
+    if (gameState == STATE_MENU) {
+        if (e->type == SDL_KEYDOWN) {
+            if (e->key.keysym.sym == SDLK_UP && selectedDifficulty > 0)
+                selectedDifficulty--;
+            if (e->key.keysym.sym == SDLK_DOWN && selectedDifficulty < 2)
+                selectedDifficulty++;
+            if (e->key.keysym.sym == SDLK_RETURN) {
+                gameState = STATE_GAME;
+                setupBotDifficulty(selectedDifficulty + 1); // переводим в 1..3
+                setupBotDifficulty();
+                resetBall();
+            }
+        }
+    } else if (gameState == STATE_GAME) {
+        const Uint8* keys = SDL_GetKeyboardState(NULL);
+        if (keys[SDL_SCANCODE_W] && player.y > 0) {
+            player.y -= player.speed;
+        }
+        if (keys[SDL_SCANCODE_S] && player.y + player.h < SCREEN_HEIGHT) {
+            player.y += player.speed;
+        }
     }
 }
 
@@ -166,35 +191,34 @@ void update() {
 
 // Отрисовка всех объектов
 void render() {
-    // printf("Ball: (%.2f, %.2f)\n", ball.x, ball.y); // дебаг мяча
-    
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // фон
-    SDL_RenderClear(renderer);
+    if (gameState == STATE_MENU) {
+        renderMenu();
+    } else {
+        // printf("Ball: (%.2f, %.2f)\n", ball.x, ball.y); // дебаг мяча
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
 
-    // Белый цвет для объектов
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    // Счёт (первым)
-    renderScore();
+        SDL_Rect playerRect = {player.x, player.y, player.w, player.h};
+        SDL_Rect botRect = {bot.x, bot.y, bot.w, bot.h};
+        SDL_Rect ballRect = {
+            (int)ball.x,
+            (int)ball.y,
+            ball.size,
+            ball.size
+        };
+        // printf("Render ball at (%.1f, %.1f), size: %d\n", ball.x, ball.y, ball.size); // дебаг мяча
 
-    // Ракетки
-    SDL_Rect playerRect = {player.x, player.y, player.w, player.h};
-    SDL_Rect botRect = {bot.x, bot.y, bot.w, bot.h};
-    SDL_RenderFillRect(renderer, &playerRect);
-    SDL_RenderFillRect(renderer, &botRect);
+        SDL_RenderFillRect(renderer, &playerRect);
+        SDL_RenderFillRect(renderer, &botRect);
+        SDL_RenderFillRect(renderer, &ballRect);
 
-    // Мяч
-    SDL_Rect ballRect = {
-        (int)ball.x,
-        (int)ball.y,
-        ball.size,
-        ball.size
-    };
-    printf("Render ball at (%.1f, %.1f), size: %d\n", ball.x, ball.y, ball.size);
-    SDL_RenderFillRect(renderer, &ballRect);
-
-    SDL_RenderPresent(renderer);
+        renderScore();
+        SDL_RenderPresent(renderer);
+    }
 }
+
 
 // Отрисовка счёта
 void renderScore() {
@@ -215,6 +239,48 @@ void renderScore() {
     SDL_DestroyTexture(texture);
 }
 
+// Отрисовка меню
+void renderMenu() {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_Color white = {255, 255, 255};
+    SDL_Color yellow = {255, 255, 0};
+
+    for (int i = 0; i < 3; i++) {
+        SDL_Color color = (i == selectedDifficulty) ? yellow : white;
+
+        SDL_Surface* surface = TTF_RenderText_Solid(font, difficultyLabels[i], color);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+        int w, h;
+        SDL_QueryTexture(texture, NULL, NULL, &w, &h);
+        SDL_Rect dst = {
+            SCREEN_WIDTH / 2 - w / 2,
+            200 + i * 60,
+            w,
+            h
+        };
+
+        SDL_RenderCopy(renderer, texture, NULL, &dst);
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
+
+    // Заголовок
+    SDL_Surface* titleSurface = TTF_RenderText_Solid(font, "Select difficulty:", white);
+    SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
+    int tw, th;
+    SDL_QueryTexture(titleTexture, NULL, NULL, &tw, &th);
+    SDL_Rect titleRect = {SCREEN_WIDTH / 2 - tw / 2, 100, tw, th};
+    SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+    SDL_FreeSurface(titleSurface);
+    SDL_DestroyTexture(titleTexture);
+
+    SDL_RenderPresent(renderer);
+}
+
+
 // Сброс позиции мяча в центр
 void resetBall() {
     ball.x = SCREEN_WIDTH / 2.0f;
@@ -226,11 +292,11 @@ void resetBall() {
 }
 
 // Настройка параметров бота по уровню сложности
-void setupBotDifficulty() {
-    if (BOT_DIFFICULTY == 1) {
+void setupBotDifficulty(int level) {
+    if (level == 1) {
         reactionDelay = 10;
         botSpeed = 4;
-    } else if (BOT_DIFFICULTY == 2) {
+    } else if (level == 2) {
         reactionDelay = 5;
         botSpeed = 6;
     } else {
