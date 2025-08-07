@@ -4,7 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 
-#define MAX_SCORE 2
+#define MAX_SCORE 10
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
