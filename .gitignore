@@ -1,3 +1,10 @@
 tennis
 *.o
 *.swp
+*.tmp
+*~
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "*.embeddedhtml": "html",
-        "*.pcss": "scss",
-        "*.module": "php",
-        "sdl_ttf.h": "c"
-    }
-}
