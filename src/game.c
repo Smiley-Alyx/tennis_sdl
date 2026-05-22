@@ -1,5 +1,6 @@
 #include "game.h"
 #include "bot.h"
+#include "sound.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ int getScreenHeight() { return SCREEN_HEIGHT; }
 
 // Инициализация SDL и игровых объектов
 int init() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) return 0;
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) return 0;
     if (TTF_Init() != 0) return 0;
 
     window = SDL_CreateWindow("SDL Tennis", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -63,6 +64,8 @@ int init() {
     bot.w = 20;
     bot.h = 100;
     bot.speed = 6;
+
+    initSound();
 
     return 1;
 }
@@ -92,21 +95,38 @@ void update() {
     ball->x += ball->vx;
     ball->y += ball->vy;
 
-    if (ball->y <= 0 || ball->y + ball->size >= SCREEN_HEIGHT)
+    if (ball->y <= 0 && ball->vy < 0) {
         ball->vy = -ball->vy;
+        ball->y = 0;
+        playSound(SOUND_WALL);
+    } else if (ball->y + ball->size >= SCREEN_HEIGHT && ball->vy > 0) {
+        ball->vy = -ball->vy;
+        ball->y = SCREEN_HEIGHT - ball->size;
+        playSound(SOUND_WALL);
+    }
 
     SDL_Rect ballRect = {(int)ball->x, (int)ball->y, ball->size, ball->size};
     SDL_Rect playerRect = {player.x, player.y, player.w, player.h};
     SDL_Rect botRect = {bot->x, bot->y, bot->w, bot->h};
 
-    if (SDL_HasIntersection(&ballRect, &playerRect)) ball->vx = -ball->vx;
-    if (SDL_HasIntersection(&ballRect, &botRect)) ball->vx = -ball->vx;
+    if (SDL_HasIntersection(&ballRect, &playerRect) && ball->vx < 0) {
+        ball->vx = -ball->vx;
+        ball->x = player.x + player.w;
+        playSound(SOUND_PADDLE);
+    }
+    if (SDL_HasIntersection(&ballRect, &botRect) && ball->vx > 0) {
+        ball->vx = -ball->vx;
+        ball->x = bot->x - ball->size;
+        playSound(SOUND_PADDLE);
+    }
 
     if (ball->x < 0) {
         botScore++;
+        playSound(SOUND_SCORE);
         resetBall();
     } else if (ball->x > SCREEN_WIDTH) {
         playerScore++;
+        playSound(SOUND_SCORE);
         resetBall();
     }
 
@@ -116,6 +136,7 @@ void update() {
         } else {
             winnerText = playerScore >= MAX_SCORE ? "Player 1 wins!" : "Player 2 wins!";
         }
+        playSound(SOUND_GAME_OVER);
         *getGameState() = STATE_GAMEOVER;
     }
 }
@@ -133,6 +154,7 @@ void resetBall() {
 
 // Очистка ресурсов SDL
 void cleanUp() {
+    cleanUpSound();
     if (font) TTF_CloseFont(font);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);

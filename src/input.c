@@ -1,6 +1,7 @@
 #include "input.h"
 #include "game.h"
 #include "bot.h"
+#include "sound.h"
 
 int selectedDifficulty = 1;
 int selectedMenuItem = 0;
@@ -17,21 +18,31 @@ void handleInput(SDL_Event* e, int* running) {
 
     if (*gameState == STATE_MENU) {
         if (e->type == SDL_KEYDOWN) {
-            if (e->key.keysym.sym == SDLK_UP && selectedMenuItem > 0)
+            if (e->key.keysym.sym == SDLK_UP && selectedMenuItem > 0) {
                 selectedMenuItem--;
-            if (e->key.keysym.sym == SDLK_DOWN && selectedMenuItem < 2)
+                playSound(SOUND_MENU);
+            }
+            if (e->key.keysym.sym == SDLK_DOWN && selectedMenuItem < 2) {
                 selectedMenuItem++;
+                playSound(SOUND_MENU);
+            }
             if (e->key.keysym.sym == SDLK_LEFT || e->key.keysym.sym == SDLK_RIGHT) {
                 if (selectedMenuItem == 0) {
                     playerCount = playerCount == 1 ? 2 : 1;
+                    playSound(SOUND_MENU);
                 } else if (selectedMenuItem == 1) {
-                    if (e->key.keysym.sym == SDLK_LEFT && selectedDifficulty > 0)
+                    if (e->key.keysym.sym == SDLK_LEFT && selectedDifficulty > 0) {
                         selectedDifficulty--;
-                    if (e->key.keysym.sym == SDLK_RIGHT && selectedDifficulty < 2)
+                        playSound(SOUND_MENU);
+                    }
+                    if (e->key.keysym.sym == SDLK_RIGHT && selectedDifficulty < 2) {
                         selectedDifficulty++;
+                        playSound(SOUND_MENU);
+                    }
                 }
             }
             if (e->key.keysym.sym == SDLK_RETURN) {
+                playSound(SOUND_MENU);
                 *gameState = STATE_GAME;
                 playerScore = 0;
                 botScore = 0;
