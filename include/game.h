@@ -27,6 +27,7 @@ void cleanUp();
 
 extern int playerScore;
 extern int botScore;
+extern int playerCount;
 extern const int SCREEN_WIDTH;
 extern const int SCREEN_HEIGHT;
 

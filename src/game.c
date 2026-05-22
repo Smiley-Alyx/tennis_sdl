@@ -19,6 +19,7 @@ GameState gameState = STATE_MENU;
 
 int playerScore = 0;
 int botScore = 0;
+int playerCount = 1;
 const char* winnerText = NULL;
 
 int frameCounter = 0;
@@ -71,19 +72,21 @@ void update() {
     Paddle* bot = getBot();
     Ball* ball = getBall();
 
-    frameCounter++;
-    if (frameCounter >= getReactionDelay()) {
-        if (bot->y + bot->h / 2 < ball->y) bot->y += getBotSpeed();
-        else if (bot->y + bot->h / 2 > ball->y) bot->y -= getBotSpeed();
+    if (playerCount == 1) {
+        frameCounter++;
+        if (frameCounter >= getReactionDelay()) {
+            if (bot->y + bot->h / 2 < ball->y) bot->y += getBotSpeed();
+            else if (bot->y + bot->h / 2 > ball->y) bot->y -= getBotSpeed();
 
-        if (bot->y < 0) {
-            bot->y = 0;
-        }
-        if (bot->y + bot->h > SCREEN_HEIGHT) {
-            bot->y = SCREEN_HEIGHT - bot->h;
-        }
+            if (bot->y < 0) {
+                bot->y = 0;
+            }
+            if (bot->y + bot->h > SCREEN_HEIGHT) {
+                bot->y = SCREEN_HEIGHT - bot->h;
+            }
 
-        frameCounter = 0;
+            frameCounter = 0;
+        }
     }
 
     ball->x += ball->vx;
@@ -108,7 +111,11 @@ void update() {
     }
 
     if (playerScore >= MAX_SCORE || botScore >= MAX_SCORE) {
-        winnerText = playerScore >= MAX_SCORE ? "You win!" : "You lose!";
+        if (playerCount == 1) {
+            winnerText = playerScore >= MAX_SCORE ? "You win!" : "You lose!";
+        } else {
+            winnerText = playerScore >= MAX_SCORE ? "Player 1 wins!" : "Player 2 wins!";
+        }
         *getGameState() = STATE_GAMEOVER;
     }
 }

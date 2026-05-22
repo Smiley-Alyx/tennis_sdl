@@ -3,6 +3,7 @@
 #include "input.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <stdio.h>
 
 static void renderScore();
 static void renderMenu();
@@ -63,9 +64,26 @@ static void renderMenu() {
     SDL_Color white = {255, 255, 255};
     SDL_Color yellow = {255, 255, 0};
 
+    SDL_Surface* titleSurface = TTF_RenderText_Solid(getFont(), "Game settings:", white);
+    SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(getRenderer(), titleSurface);
+    int tw, th;
+    SDL_QueryTexture(titleTexture, NULL, NULL, &tw, &th);
+    SDL_Rect titleRect = {getScreenWidth() / 2 - tw / 2, 100, tw, th};
+    SDL_RenderCopy(getRenderer(), titleTexture, NULL, &titleRect);
+    SDL_FreeSurface(titleSurface);
+    SDL_DestroyTexture(titleTexture);
+
+    char playerCountText[30];
+    sprintf(playerCountText, "Players: %s", playerCountLabels[playerCount - 1]);
+
+    char difficultyText[30];
+    sprintf(difficultyText, "Difficulty: %s", difficultyLabels[selectedDifficulty]);
+
+    const char* menuItems[3] = {playerCountText, difficultyText, "Start game"};
+
     for (int i = 0; i < 3; i++) {
-        SDL_Color color = (i == selectedDifficulty) ? yellow : white;
-        SDL_Surface* surface = TTF_RenderText_Solid(getFont(), difficultyLabels[i], color);
+        SDL_Color color = (i == selectedMenuItem) ? yellow : white;
+        SDL_Surface* surface = TTF_RenderText_Solid(getFont(), menuItems[i], color);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);
 
         int w, h;
@@ -76,15 +94,6 @@ static void renderMenu() {
         SDL_FreeSurface(surface);
         SDL_DestroyTexture(texture);
     }
-
-    SDL_Surface* titleSurface = TTF_RenderText_Solid(getFont(), "Select difficulty:", white);
-    SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(getRenderer(), titleSurface);
-    int tw, th;
-    SDL_QueryTexture(titleTexture, NULL, NULL, &tw, &th);
-    SDL_Rect titleRect = {getScreenWidth() / 2 - tw / 2, 100, tw, th};
-    SDL_RenderCopy(getRenderer(), titleTexture, NULL, &titleRect);
-    SDL_FreeSurface(titleSurface);
-    SDL_DestroyTexture(titleTexture);
 
     SDL_RenderPresent(getRenderer());
 }
