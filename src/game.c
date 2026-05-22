@@ -75,6 +75,14 @@ void update() {
     if (frameCounter >= getReactionDelay()) {
         if (bot->y + bot->h / 2 < ball->y) bot->y += getBotSpeed();
         else if (bot->y + bot->h / 2 > ball->y) bot->y -= getBotSpeed();
+
+        if (bot->y < 0) {
+            bot->y = 0;
+        }
+        if (bot->y + bot->h > SCREEN_HEIGHT) {
+            bot->y = SCREEN_HEIGHT - bot->h;
+        }
+
         frameCounter = 0;
     }
 
