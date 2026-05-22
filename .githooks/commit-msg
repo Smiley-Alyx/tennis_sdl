@@ -1,0 +1,31 @@
+#!/bin/sh
+
+commit_msg_file="$1"
+first_line="$(sed -n '1p' "$commit_msg_file")"
+
+case "$first_line" in
+  Merge\ *|Revert\ *|fixup!\ *|squash!\ *)
+    exit 0
+    ;;
+esac
+
+if printf '%s\n' "$first_line" | grep -Eq '^(feat|fix|docs|style|refactor|test|build|chore)(\([a-z0-9._-]+\))?!?: .{1,72}$'; then
+  exit 0
+fi
+
+cat <<'EOF'
+Неверный формат сообщения коммита.
+
+Используйте:
+  type: краткое описание
+
+Допустимые type:
+  feat, fix, docs, style, refactor, test, build, chore
+
+Примеры:
+  feat: add two player mode
+  fix: ограничить движение бота экраном
+  docs: update readme
+EOF
+
+exit 1

@@ -1,0 +1,19 @@
+<type>: <short summary>
+
+# Format:
+#   <type>: <short summary>
+#
+# Examples:
+#   feat: add pause menu
+#   fix: clamp bot movement to screen bounds
+#   docs: update build instructions
+#
+# Types:
+#   feat     - new feature
+#   fix      - bug fix
+#   docs     - documentation
+#   style    - formatting only
+#   refactor - code change without behavior change
+#   test     - tests
+#   build    - build system or dependencies
+#   chore    - maintenance
