@@ -23,6 +23,7 @@ int main() {
         }
 
         if (*getGameState() == STATE_GAME) {
+            handlePlayerInput();
             update();
         }
         render();
