@@ -110,11 +110,12 @@ static void audioCallback(void* userdata, Uint8* stream, int len) {
     int sampleCount = len / (int)sizeof(int16_t);
 
     for (int i = 0; i < sampleCount; i++) {
-        if (!getConfig()->soundEnabled) {
-            buffer[i] = 0;
-            continue;
-        }
-        buffer[i] = clampSample(nextSample() + nextMusicSample());
+        int sample = 0;
+
+        if (getConfig()->soundEnabled) sample += nextSample();
+        if (getConfig()->musicEnabled) sample += nextMusicSample();
+
+        buffer[i] = clampSample(sample);
     }
 }
 

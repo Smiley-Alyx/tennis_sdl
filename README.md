@@ -27,6 +27,7 @@ make
 
 - `players` — режим `1` или `2` игрока
 - `difficulty` — сложность бота от `0` до `2`
+- `music` — фоновая музыка: `on` или `off`
 - `sound` — `on` или `off`
 - `target_score` — счёт до победы: `5`, `10` или `15`
 - `player_up`, `player_down`, `second_player_up`, `second_player_down` — клавиши управления

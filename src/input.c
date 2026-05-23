@@ -13,6 +13,7 @@ static const int targetScoreValues[3] = {5, 10, 15};
 typedef enum {
     MENU_PLAYERS,
     MENU_DIFFICULTY,
+    MENU_MUSIC,
     MENU_SOUND,
     MENU_SCORE,
     MENU_START
@@ -21,6 +22,7 @@ typedef enum {
 static MenuItem getMenuItem(int index) {
     if (index == 0) return MENU_PLAYERS;
     if (playerCount == 1 && index == 1) return MENU_DIFFICULTY;
+    if (index == getMenuItemCount() - 4) return MENU_MUSIC;
     if (index == getMenuItemCount() - 3) return MENU_SOUND;
     if (index == getMenuItemCount() - 2) return MENU_SCORE;
     return MENU_START;
@@ -52,7 +54,7 @@ static void startGame(GameState* gameState) {
 }
 
 int getMenuItemCount() {
-    return playerCount == 1 ? 5 : 4;
+    return playerCount == 1 ? 6 : 5;
 }
 
 int getStartMenuItem() {
@@ -103,6 +105,10 @@ void handleInput(SDL_Event* e, int* running) {
                         saveConfig();
                         playSound(SOUND_MENU);
                     }
+                } else if (item == MENU_MUSIC) {
+                    getConfig()->musicEnabled = !getConfig()->musicEnabled;
+                    saveConfig();
+                    playSound(SOUND_MENU);
                 } else if (item == MENU_SOUND) {
                     getConfig()->soundEnabled = !getConfig()->soundEnabled;
                     saveConfig();
@@ -122,6 +128,10 @@ void handleInput(SDL_Event* e, int* running) {
 
                 if (item == MENU_START) {
                     startGame(gameState);
+                } else if (item == MENU_MUSIC) {
+                    getConfig()->musicEnabled = !getConfig()->musicEnabled;
+                    saveConfig();
+                    playSound(SOUND_MENU);
                 } else if (item == MENU_SOUND) {
                     getConfig()->soundEnabled = !getConfig()->soundEnabled;
                     saveConfig();

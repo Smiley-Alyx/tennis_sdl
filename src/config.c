@@ -9,6 +9,7 @@ static Config config = {
     1,
     1,
     1,
+    1,
     10,
     SDL_SCANCODE_W,
     SDL_SCANCODE_S,
@@ -49,6 +50,7 @@ void loadConfig() {
 
     char key[64];
     char value[64];
+    int musicConfigured = 0;
 
     while (fscanf(file, " %63[^=]=%63s", key, value) == 2) {
         if (strcmp(key, "players") == 0) {
@@ -56,8 +58,14 @@ void loadConfig() {
             config.playerCount = players == 2 ? 2 : 1;
         } else if (strcmp(key, "difficulty") == 0) {
             config.difficulty = clampDifficulty(atoi(value));
+        } else if (strcmp(key, "music") == 0) {
+            config.musicEnabled = parseBool(value);
+            musicConfigured = 1;
         } else if (strcmp(key, "sound") == 0) {
             config.soundEnabled = parseBool(value);
+            if (!musicConfigured) {
+                config.musicEnabled = config.soundEnabled;
+            }
         } else if (strcmp(key, "target_score") == 0) {
             config.targetScore = normalizeTargetScore(atoi(value));
         } else if (strcmp(key, "player_up") == 0) {
@@ -80,6 +88,7 @@ void saveConfig() {
 
     fprintf(file, "players=%d\n", config.playerCount);
     fprintf(file, "difficulty=%d\n", config.difficulty);
+    fprintf(file, "music=%s\n", config.musicEnabled ? "on" : "off");
     fprintf(file, "sound=%s\n", config.soundEnabled ? "on" : "off");
     fprintf(file, "target_score=%d\n", config.targetScore);
     fprintf(file, "player_up=%s\n", SDL_GetScancodeName(config.playerUp));

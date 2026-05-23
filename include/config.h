@@ -6,6 +6,7 @@
 typedef struct {
     int playerCount;
     int difficulty;
+    int musicEnabled;
     int soundEnabled;
     int targetScore;
     SDL_Scancode playerUp;

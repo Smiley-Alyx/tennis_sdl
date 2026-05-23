@@ -113,23 +113,28 @@ static void renderMenu() {
     char difficultyText[30];
     sprintf(difficultyText, "Difficulty: %s", difficultyLabels[selectedDifficulty]);
 
+    char musicText[30];
+    sprintf(musicText, "Music: %s", getConfig()->musicEnabled ? "On" : "Off");
+
     char soundText[30];
     sprintf(soundText, "Sound: %s", getConfig()->soundEnabled ? "On" : "Off");
 
     char targetScoreText[30];
     sprintf(targetScoreText, "Score to win: %d", getConfig()->targetScore);
 
-    const char* menuItems[5] = {
+    const char* menuItems[6] = {
         playerCountText,
         difficultyText,
+        musicText,
         soundText,
         targetScoreText,
         "Start game"
     };
     if (playerCount == 2) {
-        menuItems[1] = soundText;
-        menuItems[2] = targetScoreText;
-        menuItems[3] = "Start game";
+        menuItems[1] = musicText;
+        menuItems[2] = soundText;
+        menuItems[3] = targetScoreText;
+        menuItems[4] = "Start game";
     }
 
     for (int i = 0; i < getMenuItemCount(); i++) {
