@@ -53,17 +53,14 @@ int init() {
     font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32);
     if (!font) return 0;
 
-    player.x = 50;
-    player.y = SCREEN_HEIGHT / 2 - 50;
     player.w = 20;
     player.h = 100;
     player.speed = 8;
 
-    bot.x = SCREEN_WIDTH - 70;
-    bot.y = SCREEN_HEIGHT / 2 - 50;
     bot.w = 20;
     bot.h = 100;
     bot.speed = 6;
+    resetPaddles();
 
     initSound();
 
@@ -139,6 +136,15 @@ void update() {
         playSound(SOUND_GAME_OVER);
         *getGameState() = STATE_GAMEOVER;
     }
+}
+
+// Сброс позиций ракеток
+void resetPaddles() {
+    player.x = 50;
+    player.y = SCREEN_HEIGHT / 2 - player.h / 2;
+
+    bot.x = SCREEN_WIDTH - 70;
+    bot.y = SCREEN_HEIGHT / 2 - bot.h / 2;
 }
 
 // Сброс позиции мяча

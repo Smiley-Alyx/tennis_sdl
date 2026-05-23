@@ -59,6 +59,7 @@ void handleInput(SDL_Event* e, int* running) {
                 *gameState = STATE_GAME;
                 playerScore = 0;
                 botScore = 0;
+                resetPaddles();
                 if (playerCount == 1) {
                     setupBotDifficulty(selectedDifficulty + 1);
                 }

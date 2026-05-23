@@ -22,6 +22,7 @@ typedef enum {
 
 int init();
 void update();
+void resetPaddles();
 void resetBall();
 void cleanUp();
 
