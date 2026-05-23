@@ -96,11 +96,11 @@ void handlePlayerInput() {
         player->y += player->speed;
     }
 
-    if (player->y < 0) {
-        player->y = 0;
+    if (player->y < getPlayfieldTop()) {
+        player->y = getPlayfieldTop();
     }
-    if (player->y + player->h > SCREEN_HEIGHT) {
-        player->y = SCREEN_HEIGHT - player->h;
+    if (player->y + player->h > getPlayfieldBottom()) {
+        player->y = getPlayfieldBottom() - player->h;
     }
 
     if (playerCount == 2) {
@@ -113,11 +113,11 @@ void handlePlayerInput() {
             secondPlayer->y += secondPlayer->speed;
         }
 
-        if (secondPlayer->y < 0) {
-            secondPlayer->y = 0;
+        if (secondPlayer->y < getPlayfieldTop()) {
+            secondPlayer->y = getPlayfieldTop();
         }
-        if (secondPlayer->y + secondPlayer->h > SCREEN_HEIGHT) {
-            secondPlayer->y = SCREEN_HEIGHT - secondPlayer->h;
+        if (secondPlayer->y + secondPlayer->h > getPlayfieldBottom()) {
+            secondPlayer->y = getPlayfieldBottom() - secondPlayer->h;
         }
     }
 }

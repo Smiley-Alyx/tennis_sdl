@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 static void renderScore();
+static void renderPlayfield();
+static void renderGameObjects();
 static void renderMenu();
 static void renderGameOver();
 
@@ -15,24 +17,12 @@ void render() {
     if (*state == STATE_MENU) {
         renderMenu();
     } else if (*state == STATE_GAME) {
-        SDL_SetRenderDrawColor(getRenderer(), 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(getRenderer(), 10, 12, 16, 255);
         SDL_RenderClear(getRenderer());
 
-        SDL_SetRenderDrawColor(getRenderer(), 255, 255, 255, 255);
-
-        Paddle* player = getPlayer();
-        Paddle* bot = getBot();
-        Ball* ball = getBall();
-
-        SDL_Rect playerRect = {player->x, player->y, player->w, player->h};
-        SDL_Rect botRect = {bot->x, bot->y, bot->w, bot->h};
-        SDL_Rect ballRect = {(int)ball->x, (int)ball->y, ball->size, ball->size};
-
-        SDL_RenderFillRect(getRenderer(), &playerRect);
-        SDL_RenderFillRect(getRenderer(), &botRect);
-        SDL_RenderFillRect(getRenderer(), &ballRect);
-
         renderScore();
+        renderPlayfield();
+        renderGameObjects();
         SDL_RenderPresent(getRenderer());
     } else if (*state == STATE_GAMEOVER) {
         renderGameOver();
@@ -41,20 +31,63 @@ void render() {
 
 static void renderScore() {
     char scoreText[20];
-    sprintf(scoreText, "%d : %d", playerScore, botScore);
+    sprintf(scoreText, "%02d : %02d", playerScore, botScore);
 
-    SDL_Color white = {255, 255, 255, 255};
+    SDL_Rect panel = {0, 0, getScreenWidth(), getPlayfieldTop()};
+    SDL_SetRenderDrawColor(getRenderer(), 18, 24, 32, 255);
+    SDL_RenderFillRect(getRenderer(), &panel);
+
+    SDL_SetRenderDrawColor(getRenderer(), 64, 78, 94, 255);
+    SDL_RenderDrawLine(getRenderer(), 0, getPlayfieldTop() - 1, getScreenWidth(), getPlayfieldTop() - 1);
+
+    SDL_Color white = {236, 240, 244, 255};
     SDL_Surface* surface = TTF_RenderText_Solid(getFont(), scoreText, white);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);
 
     int w, h;
     SDL_QueryTexture(texture, NULL, NULL, &w, &h);
-    SDL_Rect dst = {getScreenWidth() / 2 - w / 2, 20, w, h};
+    SDL_Rect dst = {getScreenWidth() / 2 - w / 2, getPlayfieldTop() / 2 - h / 2, w, h};
 
     SDL_RenderCopy(getRenderer(), texture, NULL, &dst);
 
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
+}
+
+static void renderPlayfield() {
+    SDL_Rect field = {
+        getPlayfieldLeft(),
+        getPlayfieldTop(),
+        getPlayfieldRight() - getPlayfieldLeft(),
+        getPlayfieldBottom() - getPlayfieldTop()
+    };
+
+    SDL_SetRenderDrawColor(getRenderer(), 28, 44, 36, 255);
+    SDL_RenderFillRect(getRenderer(), &field);
+
+    SDL_SetRenderDrawColor(getRenderer(), 232, 236, 228, 255);
+    SDL_RenderDrawRect(getRenderer(), &field);
+
+    int centerX = getPlayfieldLeft() + field.w / 2;
+    for (int y = getPlayfieldTop() + 16; y < getPlayfieldBottom() - 12; y += 28) {
+        SDL_RenderDrawLine(getRenderer(), centerX, y, centerX, y + 14);
+    }
+}
+
+static void renderGameObjects() {
+    SDL_SetRenderDrawColor(getRenderer(), 236, 240, 244, 255);
+
+    Paddle* player = getPlayer();
+    Paddle* bot = getBot();
+    Ball* ball = getBall();
+
+    SDL_Rect playerRect = {player->x, player->y, player->w, player->h};
+    SDL_Rect botRect = {bot->x, bot->y, bot->w, bot->h};
+    SDL_Rect ballRect = {(int)ball->x, (int)ball->y, ball->size, ball->size};
+
+    SDL_RenderFillRect(getRenderer(), &playerRect);
+    SDL_RenderFillRect(getRenderer(), &botRect);
+    SDL_RenderFillRect(getRenderer(), &ballRect);
 }
 
 static void renderMenu() {

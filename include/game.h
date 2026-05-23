@@ -42,5 +42,9 @@ const char** getWinnerText();
 int* getFrameCounter();
 int getScreenWidth();
 int getScreenHeight();
+int getPlayfieldLeft();
+int getPlayfieldTop();
+int getPlayfieldRight();
+int getPlayfieldBottom();
 
 #endif

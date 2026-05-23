@@ -9,6 +9,10 @@
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
+static const int PLAYFIELD_LEFT = 32;
+static const int PLAYFIELD_TOP = 96;
+static const int PLAYFIELD_RIGHT = 768;
+static const int PLAYFIELD_BOTTOM = 568;
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -37,6 +41,10 @@ int* getFrameCounter() { return &frameCounter; }
 
 int getScreenWidth() { return SCREEN_WIDTH; }
 int getScreenHeight() { return SCREEN_HEIGHT; }
+int getPlayfieldLeft() { return PLAYFIELD_LEFT; }
+int getPlayfieldTop() { return PLAYFIELD_TOP; }
+int getPlayfieldRight() { return PLAYFIELD_RIGHT; }
+int getPlayfieldBottom() { return PLAYFIELD_BOTTOM; }
 
 // Инициализация SDL и игровых объектов
 int init() {
@@ -78,11 +86,11 @@ void update() {
             if (bot->y + bot->h / 2 < ball->y) bot->y += getBotSpeed();
             else if (bot->y + bot->h / 2 > ball->y) bot->y -= getBotSpeed();
 
-            if (bot->y < 0) {
-                bot->y = 0;
+            if (bot->y < PLAYFIELD_TOP) {
+                bot->y = PLAYFIELD_TOP;
             }
-            if (bot->y + bot->h > SCREEN_HEIGHT) {
-                bot->y = SCREEN_HEIGHT - bot->h;
+            if (bot->y + bot->h > PLAYFIELD_BOTTOM) {
+                bot->y = PLAYFIELD_BOTTOM - bot->h;
             }
 
             frameCounter = 0;
@@ -92,13 +100,13 @@ void update() {
     ball->x += ball->vx;
     ball->y += ball->vy;
 
-    if (ball->y <= 0 && ball->vy < 0) {
+    if (ball->y <= PLAYFIELD_TOP && ball->vy < 0) {
         ball->vy = -ball->vy;
-        ball->y = 0;
+        ball->y = PLAYFIELD_TOP;
         playSound(SOUND_WALL);
-    } else if (ball->y + ball->size >= SCREEN_HEIGHT && ball->vy > 0) {
+    } else if (ball->y + ball->size >= PLAYFIELD_BOTTOM && ball->vy > 0) {
         ball->vy = -ball->vy;
-        ball->y = SCREEN_HEIGHT - ball->size;
+        ball->y = PLAYFIELD_BOTTOM - ball->size;
         playSound(SOUND_WALL);
     }
 
@@ -117,11 +125,11 @@ void update() {
         playSound(SOUND_PADDLE);
     }
 
-    if (ball->x < 0) {
+    if (ball->x < PLAYFIELD_LEFT - ball->size) {
         botScore++;
         playSound(SOUND_SCORE);
         resetBall();
-    } else if (ball->x > SCREEN_WIDTH) {
+    } else if (ball->x > PLAYFIELD_RIGHT) {
         playerScore++;
         playSound(SOUND_SCORE);
         resetBall();
@@ -140,18 +148,18 @@ void update() {
 
 // Сброс позиций ракеток
 void resetPaddles() {
-    player.x = 50;
-    player.y = SCREEN_HEIGHT / 2 - player.h / 2;
+    player.x = PLAYFIELD_LEFT + 18;
+    player.y = PLAYFIELD_TOP + (PLAYFIELD_BOTTOM - PLAYFIELD_TOP) / 2 - player.h / 2;
 
-    bot.x = SCREEN_WIDTH - 70;
-    bot.y = SCREEN_HEIGHT / 2 - bot.h / 2;
+    bot.x = PLAYFIELD_RIGHT - 18 - bot.w;
+    bot.y = PLAYFIELD_TOP + (PLAYFIELD_BOTTOM - PLAYFIELD_TOP) / 2 - bot.h / 2;
 }
 
 // Сброс позиции мяча
 void resetBall() {
     Ball* ball = getBall();
-    ball->x = SCREEN_WIDTH / 2.0f;
-    ball->y = SCREEN_HEIGHT / 2.0f;
+    ball->x = (PLAYFIELD_LEFT + PLAYFIELD_RIGHT) / 2.0f;
+    ball->y = (PLAYFIELD_TOP + PLAYFIELD_BOTTOM) / 2.0f;
     ball->vx = (rand() % 2 == 0) ? 4.5f : -4.5f;
     ball->vy = (rand() % 2 == 0) ? 3.5f : -3.5f;
     ball->size = 10;
