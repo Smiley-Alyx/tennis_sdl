@@ -1,11 +1,10 @@
 #include "game.h"
 #include "bot.h"
+#include "config.h"
 #include "sound.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
-
-#define MAX_SCORE 10
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -50,6 +49,7 @@ int getPlayfieldBottom() { return PLAYFIELD_BOTTOM; }
 int init() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) return 0;
     if (TTF_Init() != 0) return 0;
+    loadConfig();
 
     window = SDL_CreateWindow("SDL Tennis", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -64,6 +64,7 @@ int init() {
     player.w = 20;
     player.h = 100;
     player.speed = 8;
+    playerCount = getConfig()->playerCount;
 
     bot.w = 20;
     bot.h = 100;
@@ -135,11 +136,11 @@ void update() {
         resetBall();
     }
 
-    if (playerScore >= MAX_SCORE || botScore >= MAX_SCORE) {
+    if (playerScore >= getConfig()->targetScore || botScore >= getConfig()->targetScore) {
         if (playerCount == 1) {
-            winnerText = playerScore >= MAX_SCORE ? "You win!" : "You lose!";
+            winnerText = playerScore >= getConfig()->targetScore ? "You win!" : "You lose!";
         } else {
-            winnerText = playerScore >= MAX_SCORE ? "Player 1 wins!" : "Player 2 wins!";
+            winnerText = playerScore >= getConfig()->targetScore ? "Player 1 wins!" : "Player 2 wins!";
         }
         playSound(SOUND_GAME_OVER);
         *getGameState() = STATE_GAMEOVER;

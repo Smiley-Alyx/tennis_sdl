@@ -1,4 +1,5 @@
 #include "sound.h"
+#include "config.h"
 #include <SDL2/SDL.h>
 #include <stdint.h>
 
@@ -109,6 +110,10 @@ static void audioCallback(void* userdata, Uint8* stream, int len) {
     int sampleCount = len / (int)sizeof(int16_t);
 
     for (int i = 0; i < sampleCount; i++) {
+        if (!getConfig()->soundEnabled) {
+            buffer[i] = 0;
+            continue;
+        }
         buffer[i] = clampSample(nextSample() + nextMusicSample());
     }
 }
@@ -132,6 +137,7 @@ void initSound() {
 
 void playSound(SoundEffect effect) {
     if (audioDevice == 0) return;
+    if (!getConfig()->soundEnabled) return;
 
     SDL_LockAudioDevice(audioDevice);
 

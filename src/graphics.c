@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "config.h"
 #include "game.h"
 #include "input.h"
 #include <SDL2/SDL.h>
@@ -112,9 +113,23 @@ static void renderMenu() {
     char difficultyText[30];
     sprintf(difficultyText, "Difficulty: %s", difficultyLabels[selectedDifficulty]);
 
-    const char* menuItems[3] = {playerCountText, difficultyText, "Start game"};
+    char soundText[30];
+    sprintf(soundText, "Sound: %s", getConfig()->soundEnabled ? "On" : "Off");
+
+    char targetScoreText[30];
+    sprintf(targetScoreText, "Score to win: %d", getConfig()->targetScore);
+
+    const char* menuItems[5] = {
+        playerCountText,
+        difficultyText,
+        soundText,
+        targetScoreText,
+        "Start game"
+    };
     if (playerCount == 2) {
-        menuItems[1] = "Start game";
+        menuItems[1] = soundText;
+        menuItems[2] = targetScoreText;
+        menuItems[3] = "Start game";
     }
 
     for (int i = 0; i < getMenuItemCount(); i++) {
@@ -149,7 +164,7 @@ static void renderGameOver() {
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
 
-    SDL_Surface* hintSurface = TTF_RenderText_Solid(getFont(), "Enter -- again | Esc -- exit", white);
+    SDL_Surface* hintSurface = TTF_RenderText_Solid(getFont(), "Enter -- menu | R -- again | Esc -- exit", white);
     SDL_Texture* hintTexture = SDL_CreateTextureFromSurface(getRenderer(), hintSurface);
     SDL_QueryTexture(hintTexture, NULL, NULL, &w, &h);
     SDL_Rect hintRect = {getScreenWidth() / 2 - w / 2, 300, w, h};

@@ -4,6 +4,7 @@
 #include "graphics.h"
 #include "input.h"
 #include "bot.h"
+#include "config.h"
 
 int main() {
     if (!init()) {
@@ -11,6 +12,7 @@ int main() {
         return 1;
     }
 
+    selectedDifficulty = getConfig()->difficulty;
     setupBotDifficulty(selectedDifficulty + 1);
     resetBall();
 
