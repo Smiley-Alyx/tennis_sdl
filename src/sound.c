@@ -4,6 +4,8 @@
 
 #define SAMPLE_RATE 44100
 #define MAX_TONES 16
+#define MUSIC_VOLUME 1200
+#define MUSIC_LOOP_LENGTH 8
 
 typedef struct {
     float frequency;
@@ -12,10 +14,29 @@ typedef struct {
     int volume;
 } Tone;
 
+typedef struct {
+    float frequency;
+    int durationMs;
+} MusicNote;
+
 static SDL_AudioDeviceID audioDevice = 0;
 static Tone tones[MAX_TONES];
 static int toneCount = 0;
 static float phase = 0.0f;
+static float musicPhase = 0.0f;
+static int musicNoteIndex = 0;
+static int musicSamplesLeft = 0;
+
+static const MusicNote musicLoop[MUSIC_LOOP_LENGTH] = {
+    {392.0f, 180},
+    {493.9f, 180},
+    {587.3f, 180},
+    {493.9f, 180},
+    {440.0f, 180},
+    {523.3f, 180},
+    {659.3f, 220},
+    {0.0f, 140}
+};
 
 static void enqueueTone(float frequency, int durationMs, int volume) {
     if (toneCount >= MAX_TONES) return;
@@ -52,6 +73,35 @@ static int16_t nextSample() {
     return sample;
 }
 
+static int16_t nextMusicSample() {
+    if (musicSamplesLeft <= 0) {
+        MusicNote note = musicLoop[musicNoteIndex];
+        musicSamplesLeft = SAMPLE_RATE * note.durationMs / 1000;
+        musicNoteIndex = (musicNoteIndex + 1) % MUSIC_LOOP_LENGTH;
+        musicPhase = 0.0f;
+    }
+
+    MusicNote note = musicLoop[
+        (musicNoteIndex + MUSIC_LOOP_LENGTH - 1) % MUSIC_LOOP_LENGTH
+    ];
+    musicSamplesLeft--;
+
+    if (note.frequency <= 0.0f) return 0;
+
+    int16_t sample = musicPhase < 0.5f ? MUSIC_VOLUME : -MUSIC_VOLUME;
+
+    musicPhase += note.frequency / SAMPLE_RATE;
+    if (musicPhase >= 1.0f) musicPhase -= 1.0f;
+
+    return sample;
+}
+
+static int16_t clampSample(int sample) {
+    if (sample > INT16_MAX) return INT16_MAX;
+    if (sample < INT16_MIN) return INT16_MIN;
+    return (int16_t)sample;
+}
+
 static void audioCallback(void* userdata, Uint8* stream, int len) {
     (void)userdata;
 
@@ -59,7 +109,7 @@ static void audioCallback(void* userdata, Uint8* stream, int len) {
     int sampleCount = len / (int)sizeof(int16_t);
 
     for (int i = 0; i < sampleCount; i++) {
-        buffer[i] = nextSample();
+        buffer[i] = clampSample(nextSample() + nextMusicSample());
     }
 }
 
@@ -115,4 +165,6 @@ void cleanUpSound() {
     SDL_CloseAudioDevice(audioDevice);
     audioDevice = 0;
     toneCount = 0;
+    musicSamplesLeft = 0;
+    musicNoteIndex = 0;
 }
