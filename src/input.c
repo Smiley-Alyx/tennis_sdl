@@ -75,6 +75,55 @@ static void returnToMenu(GameState* gameState) {
     *gameState = STATE_MENU;
 }
 
+static void saveMenuChange() {
+    saveConfig();
+    playSound(SOUND_MENU);
+}
+
+static void togglePlayerCount() {
+    playerCount = playerCount == 1 ? 2 : 1;
+    getConfig()->playerCount = playerCount;
+    if (selectedMenuItem >= getMenuItemCount()) {
+        selectedMenuItem = getStartMenuItem();
+    }
+    saveMenuChange();
+}
+
+static void changeDifficulty(int direction, int wrap) {
+    int difficulty = selectedDifficulty + direction;
+
+    if (wrap) {
+        if (difficulty > 2) difficulty = 0;
+        if (difficulty < 0) difficulty = 2;
+    } else if (difficulty < 0 || difficulty > 2) {
+        return;
+    }
+
+    selectedDifficulty = difficulty;
+    getConfig()->difficulty = selectedDifficulty;
+    saveMenuChange();
+}
+
+static void toggleMusic() {
+    getConfig()->musicEnabled = !getConfig()->musicEnabled;
+    saveMenuChange();
+}
+
+static void toggleSound() {
+    getConfig()->soundEnabled = !getConfig()->soundEnabled;
+    saveMenuChange();
+}
+
+static void changeTargetScore(int direction) {
+    int scoreIndex = getTargetScoreIndex() + direction;
+
+    if (scoreIndex < 0) scoreIndex = 2;
+    if (scoreIndex > 2) scoreIndex = 0;
+
+    getConfig()->targetScore = targetScoreValues[scoreIndex];
+    saveMenuChange();
+}
+
 int getMenuItemCount() {
     return playerCount == 1 ? 6 : 5;
 }
@@ -111,42 +160,17 @@ void handleInput(SDL_Event* e, int* running) {
                 MenuItem item = getMenuItem(selectedMenuItem);
 
                 if (item == MENU_PLAYERS) {
-                    playerCount = playerCount == 1 ? 2 : 1;
-                    getConfig()->playerCount = playerCount;
-                    if (selectedMenuItem >= getMenuItemCount()) {
-                        selectedMenuItem = getStartMenuItem();
-                    }
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    togglePlayerCount();
                 } else if (item == MENU_DIFFICULTY) {
-                    if (e->key.keysym.sym == SDLK_LEFT && selectedDifficulty > 0) {
-                        selectedDifficulty--;
-                        getConfig()->difficulty = selectedDifficulty;
-                        saveConfig();
-                        playSound(SOUND_MENU);
-                    }
-                    if (e->key.keysym.sym == SDLK_RIGHT && selectedDifficulty < 2) {
-                        selectedDifficulty++;
-                        getConfig()->difficulty = selectedDifficulty;
-                        saveConfig();
-                        playSound(SOUND_MENU);
-                    }
+                    int direction = e->key.keysym.sym == SDLK_RIGHT ? 1 : -1;
+                    changeDifficulty(direction, 0);
                 } else if (item == MENU_MUSIC) {
-                    getConfig()->musicEnabled = !getConfig()->musicEnabled;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    toggleMusic();
                 } else if (item == MENU_SOUND) {
-                    getConfig()->soundEnabled = !getConfig()->soundEnabled;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    toggleSound();
                 } else if (item == MENU_SCORE) {
                     int direction = e->key.keysym.sym == SDLK_RIGHT ? 1 : -1;
-                    int scoreIndex = getTargetScoreIndex() + direction;
-                    if (scoreIndex < 0) scoreIndex = 2;
-                    if (scoreIndex > 2) scoreIndex = 0;
-                    getConfig()->targetScore = targetScoreValues[scoreIndex];
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    changeTargetScore(direction);
                 }
             }
             if (e->key.keysym.sym == SDLK_RETURN) {
@@ -155,33 +179,15 @@ void handleInput(SDL_Event* e, int* running) {
                 if (item == MENU_START) {
                     startGame(gameState);
                 } else if (item == MENU_MUSIC) {
-                    getConfig()->musicEnabled = !getConfig()->musicEnabled;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    toggleMusic();
                 } else if (item == MENU_SOUND) {
-                    getConfig()->soundEnabled = !getConfig()->soundEnabled;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    toggleSound();
                 } else if (item == MENU_PLAYERS) {
-                    playerCount = playerCount == 1 ? 2 : 1;
-                    getConfig()->playerCount = playerCount;
-                    if (selectedMenuItem >= getMenuItemCount()) {
-                        selectedMenuItem = getStartMenuItem();
-                    }
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    togglePlayerCount();
                 } else if (item == MENU_SCORE) {
-                    int scoreIndex = getTargetScoreIndex() + 1;
-                    if (scoreIndex > 2) scoreIndex = 0;
-                    getConfig()->targetScore = targetScoreValues[scoreIndex];
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    changeTargetScore(1);
                 } else if (item == MENU_DIFFICULTY) {
-                    selectedDifficulty++;
-                    if (selectedDifficulty > 2) selectedDifficulty = 0;
-                    getConfig()->difficulty = selectedDifficulty;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    changeDifficulty(1, 1);
                 }
             }
             if (e->key.keysym.sym == SDLK_ESCAPE) {
@@ -218,13 +224,9 @@ void handleInput(SDL_Event* e, int* running) {
                     *gameState = STATE_GAME;
                     playSound(SOUND_MENU);
                 } else if (item == PAUSE_MUSIC) {
-                    getConfig()->musicEnabled = !getConfig()->musicEnabled;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    toggleMusic();
                 } else if (item == PAUSE_SOUND) {
-                    getConfig()->soundEnabled = !getConfig()->soundEnabled;
-                    saveConfig();
-                    playSound(SOUND_MENU);
+                    toggleSound();
                 } else if (item == PAUSE_MENU) {
                     playSound(SOUND_MENU);
                     returnToMenu(gameState);
