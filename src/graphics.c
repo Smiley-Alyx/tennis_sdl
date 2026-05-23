@@ -80,8 +80,11 @@ static void renderMenu() {
     sprintf(difficultyText, "Difficulty: %s", difficultyLabels[selectedDifficulty]);
 
     const char* menuItems[3] = {playerCountText, difficultyText, "Start game"};
+    if (playerCount == 2) {
+        menuItems[1] = "Start game";
+    }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < getMenuItemCount(); i++) {
         SDL_Color color = (i == selectedMenuItem) ? yellow : white;
         SDL_Surface* surface = TTF_RenderText_Solid(getFont(), menuItems[i], color);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);

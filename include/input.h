@@ -5,6 +5,8 @@
 
 void handleInput(SDL_Event* e, int* running);
 void handlePlayerInput();
+int getMenuItemCount();
+int getStartMenuItem();
 
 extern int selectedDifficulty;
 extern int selectedMenuItem;

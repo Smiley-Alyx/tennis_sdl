@@ -8,6 +8,14 @@ int selectedMenuItem = 0;
 const char* difficultyLabels[3] = {"Easy", "Medium", "Hard"};
 const char* playerCountLabels[2] = {"1 Player", "2 Players"};
 
+int getMenuItemCount() {
+    return playerCount == 1 ? 3 : 2;
+}
+
+int getStartMenuItem() {
+    return getMenuItemCount() - 1;
+}
+
 void handleInput(SDL_Event* e, int* running) {
     GameState* gameState = getGameState();
 
@@ -18,19 +26,24 @@ void handleInput(SDL_Event* e, int* running) {
 
     if (*gameState == STATE_MENU) {
         if (e->type == SDL_KEYDOWN) {
+            int menuItemCount = getMenuItemCount();
+
             if (e->key.keysym.sym == SDLK_UP && selectedMenuItem > 0) {
                 selectedMenuItem--;
                 playSound(SOUND_MENU);
             }
-            if (e->key.keysym.sym == SDLK_DOWN && selectedMenuItem < 2) {
+            if (e->key.keysym.sym == SDLK_DOWN && selectedMenuItem < menuItemCount - 1) {
                 selectedMenuItem++;
                 playSound(SOUND_MENU);
             }
             if (e->key.keysym.sym == SDLK_LEFT || e->key.keysym.sym == SDLK_RIGHT) {
                 if (selectedMenuItem == 0) {
                     playerCount = playerCount == 1 ? 2 : 1;
+                    if (selectedMenuItem >= getMenuItemCount()) {
+                        selectedMenuItem = getStartMenuItem();
+                    }
                     playSound(SOUND_MENU);
-                } else if (selectedMenuItem == 1) {
+                } else if (playerCount == 1 && selectedMenuItem == 1) {
                     if (e->key.keysym.sym == SDLK_LEFT && selectedDifficulty > 0) {
                         selectedDifficulty--;
                         playSound(SOUND_MENU);
@@ -41,12 +54,14 @@ void handleInput(SDL_Event* e, int* running) {
                     }
                 }
             }
-            if (e->key.keysym.sym == SDLK_RETURN) {
+            if (e->key.keysym.sym == SDLK_RETURN && selectedMenuItem == getStartMenuItem()) {
                 playSound(SOUND_MENU);
                 *gameState = STATE_GAME;
                 playerScore = 0;
                 botScore = 0;
-                setupBotDifficulty(selectedDifficulty + 1);
+                if (playerCount == 1) {
+                    setupBotDifficulty(selectedDifficulty + 1);
+                }
                 resetBall();
             }
             if (e->key.keysym.sym == SDLK_ESCAPE) {
