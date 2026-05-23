@@ -43,7 +43,7 @@ static void renderScore() {
     char scoreText[20];
     sprintf(scoreText, "%d : %d", playerScore, botScore);
 
-    SDL_Color white = {255, 255, 255};
+    SDL_Color white = {255, 255, 255, 255};
     SDL_Surface* surface = TTF_RenderText_Solid(getFont(), scoreText, white);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);
 
@@ -61,8 +61,8 @@ static void renderMenu() {
     SDL_SetRenderDrawColor(getRenderer(), 0, 0, 0, 255);
     SDL_RenderClear(getRenderer());
 
-    SDL_Color white = {255, 255, 255};
-    SDL_Color yellow = {255, 255, 0};
+    SDL_Color white = {255, 255, 255, 255};
+    SDL_Color yellow = {255, 255, 0, 255};
 
     SDL_Surface* titleSurface = TTF_RenderText_Solid(getFont(), "Game settings:", white);
     SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(getRenderer(), titleSurface);
@@ -105,7 +105,7 @@ static void renderGameOver() {
     SDL_SetRenderDrawColor(getRenderer(), 0, 0, 0, 255);
     SDL_RenderClear(getRenderer());
 
-    SDL_Color white = {255, 255, 255};
+    SDL_Color white = {255, 255, 255, 255};
 
     SDL_Surface* surface = TTF_RenderText_Solid(getFont(), *getWinnerText(), white);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);
