@@ -4,5 +4,6 @@
 void setupBotDifficulty(int level);
 int getBotSpeed();
 int getReactionDelay();
+int getBotAimOffset();
 
 #endif

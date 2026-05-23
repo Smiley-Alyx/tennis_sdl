@@ -63,7 +63,7 @@ static void startGame(GameState* gameState) {
     botScore = 0;
     resetPaddles();
     if (playerCount == 1) {
-        setupBotDifficulty(selectedDifficulty + 1);
+        setupBotDifficulty(selectedDifficulty);
     }
     resetBall();
 }

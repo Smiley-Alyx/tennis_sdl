@@ -84,8 +84,19 @@ void update() {
     if (playerCount == 1) {
         frameCounter++;
         if (frameCounter >= getReactionDelay()) {
-            if (bot->y + bot->h / 2 < ball->y) bot->y += getBotSpeed();
-            else if (bot->y + bot->h / 2 > ball->y) bot->y -= getBotSpeed();
+            int botCenter = bot->y + bot->h / 2;
+            int targetY = (int)ball->y + ball->size / 2;
+
+            if (ball->vx < 0) {
+                targetY = PLAYFIELD_TOP + (PLAYFIELD_BOTTOM - PLAYFIELD_TOP) / 2;
+            } else if (ball->vy > 0) {
+                targetY -= getBotAimOffset();
+            } else {
+                targetY += getBotAimOffset();
+            }
+
+            if (botCenter < targetY) bot->y += getBotSpeed();
+            else if (botCenter > targetY) bot->y -= getBotSpeed();
 
             if (bot->y < PLAYFIELD_TOP) {
                 bot->y = PLAYFIELD_TOP;
