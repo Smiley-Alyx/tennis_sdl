@@ -7,9 +7,11 @@ void handleInput(SDL_Event* e, int* running);
 void handlePlayerInput();
 int getMenuItemCount();
 int getStartMenuItem();
+int getPauseMenuItemCount();
 
 extern int selectedDifficulty;
 extern int selectedMenuItem;
+extern int selectedPauseItem;
 extern const char* difficultyLabels[3];
 extern const char* playerCountLabels[2];
 

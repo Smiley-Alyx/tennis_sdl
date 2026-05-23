@@ -9,7 +9,9 @@
 static void renderScore();
 static void renderPlayfield();
 static void renderGameObjects();
+static void renderGame();
 static void renderMenu();
+static void renderPause();
 static void renderGameOver();
 
 void render() {
@@ -18,16 +20,24 @@ void render() {
     if (*state == STATE_MENU) {
         renderMenu();
     } else if (*state == STATE_GAME) {
-        SDL_SetRenderDrawColor(getRenderer(), 10, 12, 16, 255);
-        SDL_RenderClear(getRenderer());
-
-        renderScore();
-        renderPlayfield();
-        renderGameObjects();
+        renderGame();
+        SDL_RenderPresent(getRenderer());
+    } else if (*state == STATE_PAUSE) {
+        renderGame();
+        renderPause();
         SDL_RenderPresent(getRenderer());
     } else if (*state == STATE_GAMEOVER) {
         renderGameOver();
     }
+}
+
+static void renderGame() {
+    SDL_SetRenderDrawColor(getRenderer(), 10, 12, 16, 255);
+    SDL_RenderClear(getRenderer());
+
+    renderScore();
+    renderPlayfield();
+    renderGameObjects();
 }
 
 static void renderScore() {
@@ -152,6 +162,53 @@ static void renderMenu() {
     }
 
     SDL_RenderPresent(getRenderer());
+}
+
+static void renderPause() {
+    SDL_Rect overlay = {0, 0, getScreenWidth(), getScreenHeight()};
+    SDL_SetRenderDrawBlendMode(getRenderer(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(getRenderer(), 0, 0, 0, 180);
+    SDL_RenderFillRect(getRenderer(), &overlay);
+    SDL_SetRenderDrawBlendMode(getRenderer(), SDL_BLENDMODE_NONE);
+
+    SDL_Color white = {255, 255, 255, 255};
+    SDL_Color yellow = {255, 255, 0, 255};
+
+    SDL_Surface* titleSurface = TTF_RenderText_Solid(getFont(), "Paused", white);
+    SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(getRenderer(), titleSurface);
+    int tw, th;
+    SDL_QueryTexture(titleTexture, NULL, NULL, &tw, &th);
+    SDL_Rect titleRect = {getScreenWidth() / 2 - tw / 2, 110, tw, th};
+    SDL_RenderCopy(getRenderer(), titleTexture, NULL, &titleRect);
+    SDL_FreeSurface(titleSurface);
+    SDL_DestroyTexture(titleTexture);
+
+    char musicText[30];
+    sprintf(musicText, "Music: %s", getConfig()->musicEnabled ? "On" : "Off");
+
+    char soundText[30];
+    sprintf(soundText, "Sound: %s", getConfig()->soundEnabled ? "On" : "Off");
+
+    const char* menuItems[4] = {
+        "Resume",
+        musicText,
+        soundText,
+        "Exit to menu"
+    };
+
+    for (int i = 0; i < getPauseMenuItemCount(); i++) {
+        SDL_Color color = (i == selectedPauseItem) ? yellow : white;
+        SDL_Surface* surface = TTF_RenderText_Solid(getFont(), menuItems[i], color);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);
+
+        int w, h;
+        SDL_QueryTexture(texture, NULL, NULL, &w, &h);
+        SDL_Rect dst = {getScreenWidth() / 2 - w / 2, 210 + i * 60, w, h};
+
+        SDL_RenderCopy(getRenderer(), texture, NULL, &dst);
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
 }
 
 static void renderGameOver() {

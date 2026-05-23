@@ -6,6 +6,7 @@
 
 int selectedDifficulty = 1;
 int selectedMenuItem = 0;
+int selectedPauseItem = 0;
 const char* difficultyLabels[3] = {"Easy", "Medium", "Hard"};
 const char* playerCountLabels[2] = {"1 Player", "2 Players"};
 static const int targetScoreValues[3] = {5, 10, 15};
@@ -19,6 +20,13 @@ typedef enum {
     MENU_START
 } MenuItem;
 
+typedef enum {
+    PAUSE_RESUME,
+    PAUSE_MUSIC,
+    PAUSE_SOUND,
+    PAUSE_MENU
+} PauseItem;
+
 static MenuItem getMenuItem(int index) {
     if (index == 0) return MENU_PLAYERS;
     if (playerCount == 1 && index == 1) return MENU_DIFFICULTY;
@@ -26,6 +34,13 @@ static MenuItem getMenuItem(int index) {
     if (index == getMenuItemCount() - 3) return MENU_SOUND;
     if (index == getMenuItemCount() - 2) return MENU_SCORE;
     return MENU_START;
+}
+
+static PauseItem getPauseItem(int index) {
+    if (index == 0) return PAUSE_RESUME;
+    if (index == 1) return PAUSE_MUSIC;
+    if (index == 2) return PAUSE_SOUND;
+    return PAUSE_MENU;
 }
 
 static int getTargetScoreIndex() {
@@ -53,12 +68,23 @@ static void startGame(GameState* gameState) {
     resetBall();
 }
 
+static void returnToMenu(GameState* gameState) {
+    playerScore = 0;
+    botScore = 0;
+    selectedMenuItem = getStartMenuItem();
+    *gameState = STATE_MENU;
+}
+
 int getMenuItemCount() {
     return playerCount == 1 ? 6 : 5;
 }
 
 int getStartMenuItem() {
     return getMenuItemCount() - 1;
+}
+
+int getPauseMenuItemCount() {
+    return 4;
 }
 
 void handleInput(SDL_Event* e, int* running) {
@@ -162,12 +188,53 @@ void handleInput(SDL_Event* e, int* running) {
                 *running = 0;
             }
         }
+    } else if (*gameState == STATE_GAME) {
+        if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE) {
+            selectedPauseItem = 0;
+            *gameState = STATE_PAUSE;
+            playSound(SOUND_MENU);
+        }
+    } else if (*gameState == STATE_PAUSE) {
+        if (e->type == SDL_KEYDOWN) {
+            int pauseMenuItemCount = getPauseMenuItemCount();
+
+            if (e->key.keysym.sym == SDLK_UP && selectedPauseItem > 0) {
+                selectedPauseItem--;
+                playSound(SOUND_MENU);
+            }
+            if (e->key.keysym.sym == SDLK_DOWN && selectedPauseItem < pauseMenuItemCount - 1) {
+                selectedPauseItem++;
+                playSound(SOUND_MENU);
+            }
+            if (e->key.keysym.sym == SDLK_ESCAPE) {
+                *gameState = STATE_GAME;
+                playSound(SOUND_MENU);
+            }
+            if (e->key.keysym.sym == SDLK_LEFT || e->key.keysym.sym == SDLK_RIGHT
+                    || e->key.keysym.sym == SDLK_RETURN) {
+                PauseItem item = getPauseItem(selectedPauseItem);
+
+                if (item == PAUSE_RESUME) {
+                    *gameState = STATE_GAME;
+                    playSound(SOUND_MENU);
+                } else if (item == PAUSE_MUSIC) {
+                    getConfig()->musicEnabled = !getConfig()->musicEnabled;
+                    saveConfig();
+                    playSound(SOUND_MENU);
+                } else if (item == PAUSE_SOUND) {
+                    getConfig()->soundEnabled = !getConfig()->soundEnabled;
+                    saveConfig();
+                    playSound(SOUND_MENU);
+                } else if (item == PAUSE_MENU) {
+                    playSound(SOUND_MENU);
+                    returnToMenu(gameState);
+                }
+            }
+        }
     } else if (*gameState == STATE_GAMEOVER) {
         if (e->type == SDL_KEYDOWN) {
             if (e->key.keysym.sym == SDLK_RETURN) {
-                playerScore = 0;
-                botScore = 0;
-                *gameState = STATE_MENU;
+                returnToMenu(gameState);
             } else if (e->key.keysym.sym == SDLK_r) {
                 startGame(gameState);
             } else if (e->key.keysym.sym == SDLK_ESCAPE) {
